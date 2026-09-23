@@ -3,33 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hola IA 🤖</title>
+<title>Los SerPEPES 👑 AI</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,sans-serif;background:#111;color:#fff}
-main{text-align:center;max-width:620px;padding:32px}h1{font-size:clamp(42px,9vw,82px);margin:0 0 12px}p{opacity:.75;font-size:18px}
-button{margin-top:20px;padding:14px 22px;border:0;border-radius:999px;font-size:17px;cursor:pointer}
-#msg{min-height:28px;margin-top:24px;font-weight:700}
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#f7f7fb;background:#09090d}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#29213d 0,#09090d 48%);display:flex;justify-content:center}
+.app{width:min(900px,100%);min-height:100vh;display:flex;flex-direction:column}
+header{padding:22px 20px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #292932}
+.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#fff;color:#111;font-size:23px}
+h1{font-size:20px;margin:0}header p{margin:3px 0 0;color:#a9a9b5;font-size:13px}
+#chat{flex:1;padding:24px 18px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:78%;padding:13px 15px;border-radius:18px;line-height:1.5;white-space:pre-wrap}
+.ai{align-self:flex-start;background:#1b1b23;border:1px solid #2c2c37}.user{align-self:flex-end;background:#f4f4f5;color:#111}
+.empty{text-align:center;margin:auto;color:#8d8d99}.empty b{display:block;color:#fff;font-size:30px;margin-bottom:8px}
+form{display:flex;gap:9px;padding:14px 16px 18px;border-top:1px solid #292932;background:#09090d}
+input{flex:1;border:1px solid #343440;background:#15151b;color:#fff;border-radius:15px;padding:14px 16px;font-size:16px;outline:none}
+input:focus{border-color:#777}.send{border:0;border-radius:15px;padding:0 19px;font-size:16px;cursor:pointer;background:#fff;color:#111}
+button:disabled{opacity:.5;cursor:wait}.status{font-size:12px;color:#777;margin:0 18px 8px}
+@media(max-width:600px){.msg{max-width:88%}.send{padding:0 15px}}
 </style>
 </head>
 <body>
-<main>
-<h1>Hola IA 🤖</h1>
-<p>Un pequeño experimento apareció aquí de repente.</p>
-<button id="btn">Sorpréndeme</button>
-<div id="msg"></div>
-</main>
+<div class="app">
+<header><div class="logo">👑</div><div><h1>Los SerPEPES 👑 AI</h1><p>Asistente experimental</p></div></header>
+<main id="chat"><div class="empty" id="welcome"><b>Hola 👋</b>Escribe algo y habla con Los SerPEPES AI.</div></main>
+<p class="status" id="status">Listo</p>
+<form id="form"><input id="input" autocomplete="off" placeholder="Escribe un mensaje..." maxlength="2000"><button class="send" id="send">Enviar</button></form>
+</div>
 <script>
-const mensajes=[
-"🤖 La IA ha entrado en modo misterio.",
-"🚀 Próxima parada: algo inesperado.",
-"🧠 Pensando... 01001000 01101001",
-"✨ Este botón no tenía por qué existir. Pero existe.",
-"🎲 Has desbloqueado una sorpresa completamente aleatoria.",
-"👀 Ahora mira el repositorio y descubre qué más hay."
-];
-document.querySelector("#btn").onclick=()=>{
- document.querySelector("#msg").textContent=mensajes[Math.floor(Math.random()*mensajes.length)];
-};
+const API="https://text.pollinations.ai/";
+const chat=document.querySelector("#chat"),form=document.querySelector("#form"),input=document.querySelector("#input"),send=document.querySelector("#send"),status=document.querySelector("#status");
+const history=[];
+function add(text,who){document.querySelector("#welcome")?.remove();const el=document.createElement("div");el.className="msg "+who;el.textContent=text;chat.appendChild(el);chat.scrollTop=chat.scrollHeight;return el}
+form.addEventListener("submit",async e=>{
+ e.preventDefault();const prompt=input.value.trim();if(!prompt)return;
+ add(prompt,"user");input.value="";send.disabled=true;status.textContent="Pensando…";
+ try{
+   const context=history.slice(-8).map(x=>(x.role==="user"?"Usuario: ":"Los SerPEPES AI: ")+x.content).join("\n");
+   const full="Eres Los SerPEPES 👑 AI, un asistente amable, útil y divertido. Responde en español salvo que el usuario use otro idioma. Sé claro y no inventes datos.\n"+context+"\nUsuario: "+prompt+"\nLos SerPEPES AI:";
+   const r=await fetch(API+encodeURIComponent(full));
+   if(!r.ok)throw new Error("API "+r.status);
+   const answer=(await r.text()).trim()||"No he recibido una respuesta.";
+   add(answer,"ai");history.push({role:"user",content:prompt},{role:"assistant",content:answer});
+   if(history.length>16)history.splice(0,2);
+   status.textContent="Listo";
+ }catch(err){add("No he podido conectar con el servicio de IA ahora mismo. Prueba de nuevo en unos segundos.","ai");status.textContent="Error de conexión";}
+ finally{send.disabled=false;input.focus()}
+});
 </script>
 </body>
 </html>
